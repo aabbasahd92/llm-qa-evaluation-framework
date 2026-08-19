@@ -2,6 +2,18 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 
+# Override the LLM service dependency with a fake implementation so tests
+# never call external APIs.
+from llm.service import get_llm_service
+
+
+class _FakeLLMService:
+    async def answer_question(self, question: str) -> str:
+        return f"FAKE_ANSWER: {question}"
+
+
+app.dependency_overrides[get_llm_service] = lambda: _FakeLLMService()
+
 client = TestClient(app)
 
 
@@ -19,7 +31,7 @@ def test_valid_ask_request() -> None:
 
     assert response.status_code == 200
     assert response.json()["question"] == payload["question"]
-    assert "placeholder" in response.json()["answer"].lower()
+    assert response.json()["answer"] == f"FAKE_ANSWER: {payload['question']}"
     assert response.json()["sources"] == []
 
 

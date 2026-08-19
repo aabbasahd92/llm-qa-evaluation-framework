@@ -1,5 +1,7 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel, Field
+
+from llm.service import LLMService, get_llm_service
 
 app = FastAPI(title="llm-qa-evaluation-framework", version="0.1.0")
 
@@ -20,18 +22,21 @@ def health_check() -> dict[str, str]:
 
 
 @app.post("/api/v1/ask", response_model=AskResponse)
-def ask_question(request: AskRequest) -> AskResponse:
+async def ask_question(request: AskRequest, llm_service: LLMService = Depends(get_llm_service)) -> AskResponse:
     question = request.question.strip()
     if not question:
         raise HTTPException(status_code=400, detail="Question cannot be empty or whitespace.")
 
-    placeholder_answer = (
-        "This is a placeholder response from the Stage 1 foundation. "
-        f"No LLM or retrieval system is connected yet for: '{question}'"
-    )
+    try:
+        answer = await llm_service.answer_question(question)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Question cannot be empty or whitespace.")
+    except Exception:
+        # Hide provider/internal errors from clients
+        raise HTTPException(status_code=502, detail="LLM provider error")
 
     return AskResponse(
         question=question,
-        answer=placeholder_answer,
+        answer=answer,
         sources=[],
     )
