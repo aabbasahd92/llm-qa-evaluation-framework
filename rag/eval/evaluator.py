@@ -69,3 +69,28 @@ def evaluate_dataset(dataset: List[Dict[str, Any]], answers: Dict[str, str]) -> 
         "results": results,
     }
     return report
+
+
+# ------- End-to-end RAG evaluator helpers -------
+import asyncio
+
+
+async def evaluate_example_rag(example: Dict[str, Any], llm_service, retriever, prompt_builder, top_k: int = 5, diversify_sources: bool = True) -> Dict[str, Any]:
+    """Evaluate a single example by running the retriever + prompt builder + LLMService.
+
+    llm_service: instance of LLMService
+    retriever: object with retrieve(query, top_k, diversify_sources)
+    prompt_builder: object with build(question, retrieved_chunks)
+
+    Returns the same dict shape as evaluate_example.
+    """
+    # Get model answer from LLMService (async)
+    question = example.get("question")
+    model_answer = await llm_service.answer_question_with_context(question, retriever=retriever, prompt_builder=prompt_builder, top_k=top_k, diversify_sources=diversify_sources)
+    # Delegate to existing evaluator
+    return evaluate_example(example, model_answer)
+
+
+def evaluate_example_rag_sync(example: Dict[str, Any], llm_service, retriever, prompt_builder, top_k: int = 5, diversify_sources: bool = True) -> Dict[str, Any]:
+    """Synchronous wrapper for evaluate_example_rag for test convenience."""
+    return asyncio.run(evaluate_example_rag(example, llm_service, retriever, prompt_builder, top_k=top_k, diversify_sources=diversify_sources))
