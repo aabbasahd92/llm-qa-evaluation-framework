@@ -1,7 +1,13 @@
 """End-to-end evaluator tests using Fake LLM and Fake Retriever."""
+import sys
 import asyncio
 from pathlib import Path
 import json
+
+# Ensure repo root is on sys.path so package imports resolve in CI
+repo_root = Path(__file__).resolve().parents[1]
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
 
 from llm.service import LLMService
 from rag.prompt import RAGPromptBuilder
