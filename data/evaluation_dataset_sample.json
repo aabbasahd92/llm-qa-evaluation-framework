@@ -1,0 +1,48 @@
+[
+  {
+    "id": "example-001",
+    "question": "How do I reset my password?",
+    "expected_answers": [
+      {
+        "expected_text": "To reset your password, go to Settings > Security, click 'Reset password', and follow the emailed link.",
+        "required_points": [
+          "go to Settings > Security",
+          "click 'Reset password'",
+          "follow the emailed link"
+        ],
+        "canonical_answer_variants": [
+          "Go to Settings → Security, choose Reset password and follow the link sent by email.",
+          "Reset your password from Settings > Security by clicking Reset password and using the emailed link."
+        ]
+      }
+    ],
+    "gold_evidence": [
+      {
+        "source_id": "kb_doc_1_chunk_2",
+        "text": "Users can reset their password from Settings > Security by selecting Reset password; a reset link will be emailed."
+      }
+    ],
+    "allow_abstain": false
+  },
+  {
+    "id": "example-002",
+    "question": "What is the refund policy for subscriptions?",
+    "expected_answers": [
+      {
+        "expected_text": "Subscriptions are refundable within 30 days of purchase if unused.",
+        "required_points": ["refundable within 30 days", "unused subscription"],
+        "canonical_answer_variants": [
+          "Refunds allowed within 30 days for unused subscriptions.",
+          "Unused subscriptions may be refunded within 30 days."
+        ]
+      }
+    ],
+    "gold_evidence": [
+      {
+        "source_id": "kb_doc_5_chunk_1",
+        "text": "Refunds: Subscriptions are refundable within 30 days of purchase when the subscription has not been used."
+      }
+    ],
+    "allow_abstain": true
+  }
+]
