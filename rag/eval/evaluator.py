@@ -86,7 +86,20 @@ async def evaluate_example_rag(example: Dict[str, Any], llm_service, retriever, 
     """
     # Get model answer from LLMService (async)
     question = example.get("question")
-    model_answer = await llm_service.answer_question_with_context(question, retriever=retriever, prompt_builder=prompt_builder, top_k=top_k, diversify_sources=diversify_sources)
+    # Prefer LLMService convenience API if present; otherwise perform retrieve->build->client.generate
+    if hasattr(llm_service, "answer_question_with_context"):
+        model_answer = await llm_service.answer_question_with_context(question, retriever=retriever, prompt_builder=prompt_builder, top_k=top_k, diversify_sources=diversify_sources)
+    else:
+        # perform retrieval
+        retrieved = retriever.retrieve(question, top_k=top_k, diversify_sources=diversify_sources)
+        # build prompt
+        prompt = prompt_builder.build(question, retrieved)
+        # call underlying client
+        client = getattr(llm_service, "_client", None)
+        if client is None:
+            raise RuntimeError("LLM service has no underlying client to call")
+        model_answer = await client.generate(prompt, model=getattr(llm_service, "_default_model", None))
+
     # Delegate to existing evaluator
     return evaluate_example(example, model_answer)
 
