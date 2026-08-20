@@ -10,10 +10,19 @@ if str(repo_root) not in sys.path:
     sys.path.insert(0, str(repo_root))
 
 from llm.service import LLMService
-from rag.prompt import RAGPromptBuilder
-from rag.models import Chunk
 
 from rag.eval import evaluator
+
+
+class _FakeBuilder:
+    def build(self, question: str, retrieved_chunks):
+        parts = ["USER QUESTION\n", question.strip(), "\n\n"]
+        # include retrieved chunk texts if present
+        for item in retrieved_chunks:
+            c = item.get("chunk") if isinstance(item, dict) else item
+            text = getattr(c, "text", None) or (c.get("text") if isinstance(c, dict) else str(c))
+            parts.insert(0, f"[Source chunk]\n{text}\n\n")
+        return "".join(parts)
 
 
 class _FakeClient:
@@ -28,6 +37,7 @@ class _FakeClient:
 
 class _FakeRetriever:
     def __init__(self, chunks):
+        # chunks are simple dicts with 'text' and 'source'
         self.chunks = chunks
         self.last_call = None
 
@@ -37,7 +47,7 @@ class _FakeRetriever:
 
 
 def make_chunk(i, source, text):
-    return Chunk(chunk_id=f"c{i}", document_id=f"d{i}", source=source, text=text, chunk_index=0)
+    return {"chunk_id": f"c{i}", "document_id": f"d{i}", "source": source, "text": text, "chunk_index": 0}
 
 
 def _load_sample():
@@ -53,7 +63,7 @@ def test_evaluator_e2e_happy_path():
     retriever = _FakeRetriever(chunks)
     client = _FakeClient()
     svc = LLMService(client)
-    builder = RAGPromptBuilder()
+    builder = _FakeBuilder()
 
     # run async evaluator
     res = asyncio.run(evaluator.evaluate_example_rag(ex, svc, retriever, builder, top_k=2, diversify_sources=False))
@@ -71,7 +81,7 @@ def test_evaluator_e2e_abstain():
     retriever = _FakeRetriever(chunks)
     client = _FakeClient()
     svc = LLMService(client)
-    builder = RAGPromptBuilder()
+    builder = _FakeBuilder()
 
     res = asyncio.run(evaluator.evaluate_example_rag(ex, svc, retriever, builder))
     # fake client echoes question; since no context it will include the question only — judge should not mark abstain automatically
