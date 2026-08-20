@@ -13,6 +13,7 @@ import re
 
 _ABSTAIN_PATTERNS = [
     r"i don'?t know",
+    r"don'?t have (that )?information",
     r"cannot answer",
     r"cannot provide",
     r"no information",

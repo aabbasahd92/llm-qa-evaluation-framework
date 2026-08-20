@@ -10,10 +10,6 @@
           "click 'Reset password'",
           "follow the emailed link"
         ],
-        "canonical_answer_variants": [
-          "Go to Settings → Security, choose Reset password and follow the link sent by email.",
-          "Reset your password from Settings > Security by clicking Reset password and using the emailed link."
-        ]
       }
     ],
     "gold_evidence": [
